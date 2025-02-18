@@ -30,4 +30,15 @@ async def score(interaction: discord.Interaction):
     points = await check_points(interaction.user)
     await interaction.response.send_message(f"{interaction.user.display_name} possui {points} pontos!")
     
+@tree.command(name="ranking", description="Exibe o ranking dos usuários com mais pontos")
+async def ranking(interaction: discord.Interaction):
+    ranking_list = await getRanking()  # Obtém o ranking
+
+    if not ranking_list:
+        await interaction.response.send_message("Ainda não há usuários no ranking.", ephemeral=True)
+        return
+
+    ranking_message = "**🏆 Ranking de Pontos 🏆**\n" + "\n".join(ranking_list)
+    await interaction.response.send_message(ranking_message)
+    
 acliente.run(os.getenv("DISCORD_TOKEN"))

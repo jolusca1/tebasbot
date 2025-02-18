@@ -40,4 +40,13 @@ async def changePoints(user, quantity):
         "$set": {"points": actuallyPoints + quantity}  # Nome corrigido para "points"
     }
     
-    users.update_one(filter_query, update_query)      
+    users.update_one(filter_query, update_query)
+    
+async def getRanking(limit=10):
+    ranking = users.find().sort("points", -1).limit(limit)  # Ordena por pontos (maior para menor)
+    
+    ranking_list = []
+    for i, user in enumerate(ranking, start=1):
+        ranking_list.append(f"{i}. <@{user['discord_id']}> - {user['points']} pontos")
+
+    return ranking_list
