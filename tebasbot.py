@@ -7,6 +7,8 @@ from database import *
 
 load_dotenv()
 
+#teste deploy
+
 class Client(discord.Client):
     def __init__(self):
         super().__init__(intents=discord.Intents.default())
