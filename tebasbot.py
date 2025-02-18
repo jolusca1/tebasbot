@@ -30,6 +30,7 @@ async def score(interaction: discord.Interaction):
     points = await check_points(interaction.user)
     await interaction.response.send_message(f"{interaction.user.display_name} possui {points} pontos!")
     
+# Rank
 @tree.command(name="ranking", description="Exibe o ranking dos usuários com mais pontos")
 async def ranking(interaction: discord.Interaction):
     ranking_list = await getRanking()  # Obtém o ranking
