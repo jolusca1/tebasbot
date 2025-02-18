@@ -9,34 +9,35 @@ database = client['tebasBot']
 users = database['users']
 
 async def newUser(user):
-    fill = {"discord_id": user.id}
-    if users.count_documents(fill) == 0:
+    filter_query = {"discord_id": user.id}
+    
+    if users.count_documents(filter_query) == 0:
         userObject = {
             "discord_id": user.id,
             "points": 10
         }
         users.insert_one(userObject)
         return userObject
-    else:
-        return False
+    return False
     
+# Verificar pontos do usuário
 async def check_points(user):
-    await newUser(user)
+    await newUser(user)  # Garantir que o usuário existe
     
-    fill = {"discord_id": user.id}
-    result = users.find(fill)
+    filter_query = {"discord_id": user.id}
+    result = users.find_one(filter_query)
     
-    return result.__getitem__(0)["points"]
+    return result["points"] if result else 0
 
+# Alterar pontos do usuário
 async def changePoints(user, quantity):
-    await newUser(user)
+    await newUser(user)  # Garantir que o usuário existe
     
-    actuallyPoints = await checkPoints(user)
+    actuallyPoints = await check_points(user)  # Buscar os pontos atuais
     
-    fill = {"discordId": user.id}
-    relation = { "$set": {
-        "coins": actuallyPoints + quantity                
-        }
+    filter_query = {"discord_id": user.id}  # Nome corrigido
+    update_query = {
+        "$set": {"points": actuallyPoints + quantity}  # Nome corrigido para "points"
     }
     
-    users.update_one(fill, relation)        
+    users.update_one(filter_query, update_query)      
