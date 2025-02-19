@@ -29,7 +29,7 @@ tree = app_commands.CommandTree(acliente)
 @tree.command(name="score", description="Confira seu score")
 async def score(interaction: discord.Interaction):
     points = await check_points(interaction.user)
-    await interaction.response.send_message(f"<@{interaction.user.id}> possui {points} pontos!")
+    await interaction.response.send_message(f"🏅 <@{interaction.user.id}> possui **{points} pontos**!")
     
 # Ranking de usuários com mention
 @tree.command(name="ranking", description="Exibe o ranking dos usuários com mais pontos")
@@ -55,8 +55,6 @@ async def add_game_command(interaction: discord.Interaction, name: str, score: i
     await interaction.response.send_message(message)
 
 # Comando para marcar um jogo como zerado
-@tree.command(name="zerei", description="Marque um jogo como zerado e ganhe pontos!")
-@app_commands.describe(name="Nome do jogo que você zerou")
 async def completeGame(user, game_name):
     """Marca um jogo como zerado por um usuário, buscando pelo nome aproximado."""
     
@@ -85,6 +83,12 @@ async def completeGame(user, game_name):
     )
 
     return f"🏆 {user.display_name} zerou **{game['name']}** e ganhou **{game['score']} pontos**!"
+
+@tree.command(name="zerei", description="Marque um jogo como zerado e ganhe pontos")
+@app_commands.describe(game_name="Nome (ou parte do nome) do jogo")
+async def complete_game_command(interaction: discord.Interaction, game_name: str):
+    message = await completeGame(interaction.user, game_name)
+    await interaction.response.send_message(message)
 
     
 acliente.run(os.getenv("DISCORD_TOKEN"))
