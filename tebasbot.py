@@ -128,4 +128,4 @@ async def comandos(interaction: discord.Interaction):
     
 acliente.run(os.getenv("DISCORD_TOKEN"))"""
 
-await interaction.response.send_message(command_list, ephemeral=False)
+    await interaction.response.send_message(command_list, ephemeral=False)
