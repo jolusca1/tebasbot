@@ -16,7 +16,7 @@ async def newUser(user):
     if users.count_documents(filter_query) == 0:
         userObject = {
             "discord_id": user.id,
-            "points": 10
+            "points": 0
         }
         users.insert_one(userObject)
         return userObject
