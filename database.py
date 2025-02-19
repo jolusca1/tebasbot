@@ -104,3 +104,10 @@ async def get_completed_games(user):
     total_score = sum(game["score"] for game in games)
 
     return games, total_score
+
+async def get_all_games():    
+    games_cursor = games.find()
+    
+    game_list = list(games_cursor)
+    
+    return game_list

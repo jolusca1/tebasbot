@@ -111,6 +111,20 @@ async def games_completed(interaction: discord.Interaction, user: discord.User):
 
     await interaction.response.send_message(message)
     
+@tree.command(name="jogos", description="Lista dos jogos cadastrados.")
+async def jogos(interaction: discord.Interaction):
+    games = await get_all_games()
+
+    if not games:
+        await interaction.response.send_message("Ainda não há jogos cadastrados.", ephemeral=True)
+        return
+
+    game_list = "\n".join([f"🔹 {game['name']} - {game['score']} pontos" for game in games])
+
+    message = f"🎮 **Jogos cadastrados:**\n\n{game_list}"
+
+    await interaction.response.send_message(message)
+
 @tree.command(name="comandos", description="Lista todos os comandos disponíveis e como usá-los")
 async def comandos(interaction: discord.Interaction):
     command_list = """📌 **Comandos do Bot** 🎮🤖  
