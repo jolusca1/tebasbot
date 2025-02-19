@@ -44,7 +44,7 @@ async def ranking(interaction: discord.Interaction):
     await interaction.response.send_message(ranking_message)
     
 # Comando para adicionar um jogo ao banco
-@tree.command(name="adicionar jogo", description="Adiciona um jogo ao banco de dados")
+@tree.command(name="adicionar_jogo", description="Adiciona um jogo ao banco de dados")
 @app_commands.describe(name="Nome do jogo", score="Pontuação ao zerar")
 async def add_game_command(interaction: discord.Interaction, name: str, score: int):
     if score <= 0:
