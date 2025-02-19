@@ -29,7 +29,7 @@ tree = app_commands.CommandTree(acliente)
 @tree.command(name="score", description="Confira seu score")
 async def score(interaction: discord.Interaction):
     points = await check_points(interaction.user)
-    await interaction.response.send_message(f"🏅 <@{interaction.user.id}> possui **{points} pontos**!")
+    await interaction.response.send_message(f"<@{interaction.user.id}> possui {points} pontos!")
     
 # Ranking de usuários com mention
 @tree.command(name="ranking", description="Exibe o ranking dos usuários com mais pontos")
@@ -44,15 +44,17 @@ async def ranking(interaction: discord.Interaction):
     await interaction.response.send_message(ranking_message)
     
 # Comando para adicionar um jogo ao banco
-@tree.command(name="adicionar_jogo", description="Adiciona um jogo ao banco de dados")
-@app_commands.describe(name="Nome do jogo", score="Pontuação ao zerar")
-async def add_game_command(interaction: discord.Interaction, name: str, score: int):
+@tree.command(name="add_game", description="Adicione um novo jogo ao sistema")
+@app_commands.describe(game_name="Nome do jogo", score="Pontuação atribuída ao jogo")
+async def add_game_command(interaction: discord.Interaction, game_name: str, score: int):
+    
     if score <= 0:
         await interaction.response.send_message("A pontuação deve ser maior que zero!", ephemeral=True)
         return
-
-    success, message = await addGame(name, score)
+    
+    message = await add_game(game_name, score)
     await interaction.response.send_message(message)
+
 
 # Comando para marcar um jogo como zerado
 async def completeGame(user, game_name):
