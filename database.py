@@ -7,6 +7,7 @@ load_dotenv()
 client = pymongo.MongoClient(os.getenv("MONGO_TOKEN"))
 database = client['tebasBot']
 users = database['users']
+games = database['games']
 
 async def newUser(user):
     filter_query = {"discord_id": user.id}
