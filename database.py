@@ -106,7 +106,8 @@ async def get_completed_games(user):
     return games, total_score
 
 async def get_all_games():    
-    games_cursor = games.find()
+    
+    games_cursor = games.find().sort("score", -1)
     
     game_list = list(games_cursor)
     
