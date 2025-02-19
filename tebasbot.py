@@ -91,6 +91,25 @@ async def completeGame(user, game_name):
 async def complete_game_command(interaction: discord.Interaction, game_name: str):
     message = await completeGame(interaction.user, game_name)
     await interaction.response.send_message(message)
+    
+@tree.command(name="games_completed", description="Veja a lista de jogos zerados e a pontuação total de um usuário")
+@app_commands.describe(user="Mencione o usuário que deseja consultar")
+async def games_completed(interaction: discord.Interaction, user: discord.User):
+    games, total_score = await get_completed_games(user)
 
+    if not games:
+        await interaction.response.send_message(f"🎮 {user.mention} ainda não zerou nenhum jogo!")
+        return
+
+    # Formata a resposta com os jogos e pontos
+    game_list = "\n".join([f"🔹 {game['name']} - {game['score']} pontos" for game in games])
+
+    message = (
+        f"🎮 **Jogos zerados por {user.mention}:**\n\n"
+        f"{game_list}\n\n"
+        f"🏅 **Pontuação total:** {total_score} pontos"
+    )
+
+    await interaction.response.send_message(message)
     
 acliente.run(os.getenv("DISCORD_TOKEN"))

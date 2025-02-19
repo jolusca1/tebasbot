@@ -91,3 +91,16 @@ async def add_game(game_name, score):
     games.insert_one(game_data)
 
     return f"✅ Jogo **{game_name}** adicionado com sucesso! (Pontuação: {score})"
+
+async def get_completed_games(user):
+    """Retorna a lista de jogos zerados por um usuário e a soma total dos pontos."""
+    
+    user_data = users.find_one({"discord_id": user.id})
+    
+    if not user_data or "games_completed" not in user_data or not user_data["games_completed"]:
+        return [], 0  # Retorna lista vazia e pontuação 0 se não houver jogos
+
+    games = user_data["games_completed"]
+    total_score = sum(game["score"] for game in games)
+
+    return games, total_score
