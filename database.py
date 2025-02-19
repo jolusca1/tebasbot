@@ -35,9 +35,9 @@ async def check_points(user):
     # Pontos base do usuário
     base_points = user_data.get("points", 0)
 
-    game_points = sum(g["score"] for g in user_data.get("games_completed", []))
+    # game_points = sum(g["score"] for g in user_data.get("games_completed", []))
 
-    return base_points + game_points
+    return base_points
 
 # Alterar pontos do usuário
 async def changePoints(user, quantity):
