@@ -111,4 +111,21 @@ async def games_completed(interaction: discord.Interaction, user: discord.User):
 
     await interaction.response.send_message(message)
     
-acliente.run(os.getenv("DISCORD_TOKEN"))
+@tree.command(name="comandos", description="Lista todos os comandos disponíveis e como usá-los")
+async def comandos(interaction: discord.Interaction):
+    command_list = """📌 **Comandos do Bot** 🎮🤖  
+
+✅ **/score** – Veja sua pontuação total.  
+✅ **/ranking** – Exibe o ranking dos usuários com mais pontos.  
+✅ **/adicionar_jogo [nome] [pontuação]** – Adiciona um novo jogo ao sistema.  
+✅ **/zerei [nome do jogo]** – Marca um jogo como zerado e ganha pontos.  
+✅ **/games_completed @usuário** – Lista todos os jogos zerados e a pontuação total do usuário mencionado.  
+
+🔹 **Como usar os comandos?**  
+- Digite `/` e selecione o comando desejado.  
+- Se o comando pedir um valor (ex: nome do jogo), digite conforme solicitado.  
+- No caso de menção a outro usuário, use `@` e selecione o usuário.  
+    
+acliente.run(os.getenv("DISCORD_TOKEN"))"""
+
+await interaction.response.send_message(command_list, ephemeral=False)
