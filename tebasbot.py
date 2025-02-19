@@ -92,7 +92,7 @@ async def complete_game_command(interaction: discord.Interaction, game_name: str
     message = await completeGame(interaction.user, game_name)
     await interaction.response.send_message(message)
     
-@tree.command(name="games_completed", description="Veja a lista de jogos zerados e a pontuação total de um usuário")
+@tree.command(name="jogos_zerados", description="Veja a lista de jogos zerados e a pontuação total de um usuário")
 @app_commands.describe(user="Mencione o usuário que deseja consultar")
 async def games_completed(interaction: discord.Interaction, user: discord.User):
     games, total_score = await get_completed_games(user)
