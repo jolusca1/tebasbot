@@ -1,5 +1,6 @@
 import discord
 import os
+import re
 from dotenv import load_dotenv
 from discord import app_commands
 
@@ -41,5 +42,49 @@ async def ranking(interaction: discord.Interaction):
 
     ranking_message = "**🏆 Ranking de Pontos 🏆**\n" + "\n".join(ranking_list)
     await interaction.response.send_message(ranking_message)
+    
+# Comando para adicionar um jogo ao banco
+@tree.command(name="adicionar jogo", description="Adiciona um jogo ao banco de dados")
+@app_commands.describe(name="Nome do jogo", score="Pontuação ao zerar")
+async def add_game_command(interaction: discord.Interaction, name: str, score: int):
+    if score <= 0:
+        await interaction.response.send_message("A pontuação deve ser maior que zero!", ephemeral=True)
+        return
+
+    success, message = await addGame(name, score)
+    await interaction.response.send_message(message)
+
+# Comando para marcar um jogo como zerado
+@tree.command(name="zerei", description="Marque um jogo como zerado e ganhe pontos!")
+@app_commands.describe(name="Nome do jogo que você zerou")
+async def completeGame(user, game_name):
+    """Marca um jogo como zerado por um usuário, buscando pelo nome aproximado."""
+    
+    game = games.find_one({"name": {"$regex": re.escape(game_name), "$options": "i"}})
+
+    if not game:
+        return f"Nenhum jogo encontrado com '{game_name}'!"
+
+    await newUser(user)
+
+    user_data = users.find_one({"discord_id": user.id})
+    
+    if any(g["game_id"] == game["game_id"] for g in user_data.get("games_completed", [])):
+        return f"Você já zerou **{game['name']}**!"
+
+    users.update_one(
+        {"discord_id": user.id},
+        {
+            "$inc": {"points": game["score"]},
+            "$push": {"games_completed": {
+                "game_id": game["game_id"],
+                "name": game["name"],
+                "score": game["score"]
+            }}
+        }
+    )
+
+    return f"🏆 {user.display_name} zerou **{game['name']}** e ganhou **{game['score']} pontos**!"
+
     
 acliente.run(os.getenv("DISCORD_TOKEN"))
