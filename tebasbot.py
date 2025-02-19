@@ -101,7 +101,6 @@ async def games_completed(interaction: discord.Interaction, user: discord.User):
         await interaction.response.send_message(f"🎮 {user.mention} ainda não zerou nenhum jogo!")
         return
 
-    # Formata a resposta com os jogos e pontos
     game_list = "\n".join([f"🔹 {game['name']} - {game['score']} pontos" for game in games])
 
     message = (
