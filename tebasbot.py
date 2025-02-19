@@ -126,6 +126,6 @@ async def comandos(interaction: discord.Interaction):
 - Se o comando pedir um valor (ex: nome do jogo), digite conforme solicitado.  
 - No caso de menção a outro usuário, use `@` e selecione o usuário.""" 
 
-await interaction.response.send_message(command_list, ephemeral=True)
+    await interaction.response.send_message(command_list, ephemeral=True)
     
 acliente.run(os.getenv("DISCORD_TOKEN"))
