@@ -72,14 +72,21 @@ def getNextGameID():
     return result["seq"]
 
 # Adicionar um jogo ao banco com ID incremental
-async def addGame(name, score):
-    if games.find_one({"name": name}):  # Evita duplicatas pelo nome
-        return False, "Esse jogo já está cadastrado!"
+async def add_game(game_name, score):
+    """Adiciona um jogo ao banco de dados sem permitir duplicatas (case insensitive)."""
+    
+    # Procura um jogo que tenha o mesmo nome, ignorando maiúsculas e minúsculas
+    existing_game = games.find_one({"name": {"$regex": f"^{re.escape(game_name)}$", "$options": "i"}})
 
-    game_data = {
-        "game_id": getNextGameID(),  # Gera ID incremental
-        "name": name,
-        "score": score
-    }
+    if existing_game:
+        return f"⚠️ O jogo **{existing_game['name']}** já está cadastrado com {existing_game['score']} pontos."
+
+    # Gera um game_id incremental
+    last_game = games.find_one(sort=[("game_id", -1)])
+    new_game_id = (last_game["game_id"] + 1) if last_game else 1
+
+    # Insere o jogo no banco
+    game_data = {"game_id": new_game_id, "name": game_name, "score": score}
     games.insert_one(game_data)
-    return True, f"Jogo **{name}** adicionado com {score} pontos! ID: {game_data['game_id']}"
+
+    return f"✅ Jogo **{game_name}** adicionado com sucesso! (Pontuação: {score})"
