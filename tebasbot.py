@@ -133,7 +133,8 @@ async def comandos(interaction: discord.Interaction):
 ✅ **/ranking** – Exibe o ranking dos usuários com mais pontos.  
 ✅ **/adicionar_jogo [nome] [pontuação]** – Adiciona um novo jogo ao sistema.  
 ✅ **/zerei [nome do jogo]** – Marca um jogo como zerado e ganha pontos.  
-✅ **/jogos_zerados @usuário** – Lista todos os jogos zerados e a pontuação total do usuário mencionado.  
+✅ **/jogos_zerados @usuário** – Lista todos os jogos zerados e a pontuação total do usuário mencionado. 
+✅ **/jogos** – Lista todos os jogos cadastrados juntamente com os pontos de equivalência.
 
 🔹 **Como usar os comandos?**  
 - Digite `/` e selecione o comando desejado.  
