@@ -112,3 +112,10 @@ async def get_all_games():
     game_list = list(games_cursor)
     
     return game_list
+
+async def get_games_by_name(game_name):
+    games_cursor = games.find(
+        {"name": {"$regex": re.escape(game_name), "$options": "i"}}
+    ).sort("score", -1)
+
+    return list(games_cursor)

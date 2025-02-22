@@ -112,8 +112,12 @@ async def games_completed(interaction: discord.Interaction, user: discord.User):
     await interaction.response.send_message(message)
     
 @tree.command(name="jogos", description="Lista dos jogos cadastrados.")
-async def jogos(interaction: discord.Interaction):
-    games = await get_all_games()
+async def jogos(interaction: discord.Interaction, game_name:str=None):
+    
+    if not game_name:
+        games = await get_all_games()
+    else:
+        games = await get_games_by_name(game_name)
 
     if not games:
         await interaction.response.send_message("Ainda não há jogos cadastrados.", ephemeral=True)
