@@ -124,8 +124,10 @@ async def jogos(interaction: discord.Interaction, game_name:str=None):
         return
 
     game_list = "\n".join([f"🔹 {game['name']} - {game['score']} pontos" for game in games])
-
-    message = f"🎮 **Jogos cadastrados:**\n\n{game_list}"
+    if not game_name:
+        message = f"🎮 **Jogos cadastrados:**\n\n{game_list}"
+    else:
+        message = f"""🎮 **Jogos cadastrados com "{game_name}":**\n\n{game_list}"""
 
     await interaction.response.send_message(message)
 
