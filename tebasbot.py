@@ -3,6 +3,7 @@ import os
 import re
 from dotenv import load_dotenv
 from discord import app_commands
+from steam_service.api_service import get_steam_profile, get_games_played_recently
 
 from database import *
 
@@ -130,6 +131,34 @@ async def jogos(interaction: discord.Interaction, game_name:str=None):
         message = f"""🎮 **Jogos cadastrados com "{game_name}":**\n\n{game_list}"""
 
     await interaction.response.send_message(message)
+    
+@tree.command(name="perfil_steam", description="Pesquisar perfil na Steam")
+async def steam(interaction: discord.Interaction, name: str):
+    player = get_steam_profile(name)
+
+    if player == "No match":
+        await interaction.response.send_message("Perfil não encontrado. Talvez o nome possa estar errado.", ephemeral=True)
+        return
+
+    embed = discord.Embed(
+        title=player["player"]["personaname"],
+        url=player["player"]["profileurl"],
+        description="Perfil da Steam",
+        color=discord.Color.blue()
+    )
+    
+    last_played = get_games_played_recently(player["player"]["steamid"])
+        
+    embed.set_thumbnail(url=player["player"]["avatarfull"])
+    
+    embed.add_field(name="Nome real", value=player["player"].get("realname", "Não disponível"), inline=True)
+    embed.add_field(name="SteamID", value=player["player"]["steamid"], inline=True)
+    embed.add_field(name="Status", value="Online" if player["player"]["personastate"] == 1 else "Offline", inline=True)
+    embed.add_field(name="Criado em", value=f"<t:{player['player']['timecreated']}:D>", inline=True)
+    for data in last_played['games']:
+        embed.add_field(name="Últimos jogos jogados", value=f"{data['name']}", inline=True)
+    
+    await interaction.response.send_message(embed=embed)
 
 @tree.command(name="comandos", description="Lista todos os comandos disponíveis e como usá-los")
 async def comandos(interaction: discord.Interaction):
