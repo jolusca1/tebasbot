@@ -200,7 +200,7 @@ async def comandos(interaction: discord.Interaction):
 @tree.command(name="adicionar_jogo", description="Adicione um novo jogo")
 @app_commands.describe(game_name="Nome do jogo")
 async def add_game_command(interaction: discord.Interaction, game_name: str):
-    await interaction.response.defer()  # Evita timeout enquanto a IA processa
+    await interaction.response.defer(thinking=True)
 
     # Obtém a nota e justificativa da IA
     nota, justificativa = await avaliar_dificuldade_jogo(game_name)

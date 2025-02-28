@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 import re
 import requests
+from google import genai
 
 load_dotenv()
 
@@ -142,28 +143,41 @@ async def get_games_by_name(game_name):
     return list(games_cursor)
 
 async def avaliar_dificuldade_jogo(game_name):
-    """Consulta o Zephyr para obter a dificuldade do jogo."""
     
     prompt = f"""
-    A partir de agora você se chama Nextage. Nextage é um gamer profissional, ele possui conhecimento profundo sobre todo tipo de videogame, através de várias plataformas e anos de lançamentos. Nextage irá me ajudar com a avaliação da dificuldade de jogos, teremos um número de jogos a serem avaliados de vários gêneros diferentes, para isso, você montará uma tabela que servirá como as diretrizes para a classificação dos jogos. Os jogos serão avaliados em sua dificuldade, para isso deve se ter em mente muitos fatores como, a duração do jogo; a "precisão de inputs"; para jogos que possuem combate deve se ter em mente a quantidade de inimigos; a força dos inimigos; a força dos personagens jogáveis; dentre outros, já para jogos de sobrevivência deve se ter em mente a dificuldade de coleta de recursos; os perigos para o jogador; dentre outros, e assim deve ser considerado de acordo com cada gênero diferente de jogo. Afim de realizar uma avaliação, é necessário reconhecer que alguns gêneros são necessariamente mais fáceis de jogar do que outros (por mais que existam exceções).
-    Para a criação da tabela, ela deve classificar jogos como "Fácil", "Normal", "Difícil", "Muito Difícil", essas dificuldades são, respectivamente, dos jogos mais fáceis aos mais difíceis. Jogos serão atribuídos notas de 1-10 baseado em sua dificuldade, portanto a tabela deve classificar as dificuldade com as seguintes notas, respectivamente, 1-2; 3-5; 6-8; 9-10. Junto com cada dificuldade também dê exemplos de jogos que se classificam, para a criação mais precisa dessa tabela tenha como exemplo:
-    Fácil - Minecraft, Pokémon
-    Normal -  Resident Evil, Hollow Knight
-    Difícil - Cuphead, Celeste
-    Muito Difícil - Soulslikes (Lies of P, Bloodborne)
-    (Lembre-se de que muitos outros jogos de gêneros diferentes dos citados acima podem ser questionados, entao use-os apenas como instruções e nao como absolutos.)
-    Com esses exemplos em mente, crie a tabela, e após a criação da tabela você receberá perguntas de jogos individuais e como eles se classificam dentro dessas diretrizes e dará uma nota para o jogo.
-    Ao avaliar os jogos individualmente, escreva um parágrafo curto como justificativa de por que o jogo recebeu essa nota, e tente evitar o uso de "bullet points" quando justificar um jogo, você não precisa apresentar os exatos pontos da prompt original, um jogo como Cyberpunk 2077 não requer tanto foco em coleta de recursos como um jogo igual Minecraft, portanto não é necessário mencionar isso na justificativa. Justifique o jogo baseado no seu estilo, não tente usar uma métrica universal para todos os jogos ao mesmo tempo.
+    Lembre-se de que esses exemplos são apenas referência. Ao avaliar um jogo individual, responda de forma objetiva em até 10 frases, dando uma nota de 1 a 10 e uma justificativa breve
+    
+    Para classificar a dificuldade de zerar jogos, considerando fatores como duração, precisão de inputs, quantidade/força de inimigos, mecânicas de combate e de sobrevivência.
+    - Fácil: 1-2 (ex.: Minecraft, Pokémon)
+    - Normal: 3-5 (ex.: Resident Evil, Hollow Knight)
+    - Difícil: 6-8 (ex.: Cuphead, Celeste)
+    - Muito Difícil: 9-10 (ex.: Soulslikes, Bloodborne)
+
+    Lembre-se de que esses exemplos são apenas referência. Ao avaliar um jogo individual, responda de forma objetiva em até 10 frases, dando uma nota de 1 a 10 e uma justificativa breve (sem bullet points) seguindo este formato:
+    Nota: X/10  
+    Justificativa: [resposta em até 10 frases].
+
+    Agora, responda para '{game_name}' seguindo esse formato.
+
     """
 
-    response = requests.post(API_URL, headers=HEADERS, json={"inputs": prompt}, timeout=60)
+    client = genai.Client(api_key=os.getenv('GEMINI_TOKEN'))
+    
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=prompt
+    )
 
-    if response.status_code == 200:
-        resposta = response.json()[0]["generated_text"]
+    if response:
+        resposta = response.text
         
         import re
         match = re.search(r'Nota: (\d{1,2})/10', resposta)
-        nota = int(match.group(1)) if match else None
+        nota = int(match.group(1)) if match and 1 <= int(match.group(1)) <= 10 else None
+        
+        if nota is None:
+            print("⚠️ Erro: A IA não retornou a nota corretamente!")
+            print("Resposta recebida:", resposta)
 
         return nota, resposta
 
