@@ -44,17 +44,17 @@ async def ranking(interaction: discord.Interaction):
     ranking_message = "**🏆 Ranking de Pontos 🏆**\n" + "\n".join(ranking_list)
     await interaction.response.send_message(ranking_message)
     
-# Comando para adicionar um jogo ao banco
-@tree.command(name="adicionar_jogo", description="Adicione um novo jogo ao sistema")
-@app_commands.describe(game_name="Nome do jogo", score="Pontuação atribuída ao jogo")
-async def add_game_command(interaction: discord.Interaction, game_name: str, score: int):
+# # Comando para adicionar um jogo ao banco
+# @tree.command(name="adicionar_jogo", description="Adicione um novo jogo ao sistema")
+# @app_commands.describe(game_name="Nome do jogo", score="Pontuação atribuída ao jogo")
+# async def add_game_command(interaction: discord.Interaction, game_name: str, score: int):
     
-    if score <= 0:
-        await interaction.response.send_message("A pontuação deve ser maior que zero!", ephemeral=True)
-        return
+#     if score <= 0:
+#         await interaction.response.send_message("A pontuação deve ser maior que zero!", ephemeral=True)
+#         return
     
-    message = await add_game(game_name, score)
-    await interaction.response.send_message(message)
+#     message = await add_game(game_name, score)
+#     await interaction.response.send_message(message)
 
 
 # Comando para marcar um jogo como zerado
@@ -196,5 +196,24 @@ async def comandos(interaction: discord.Interaction):
 
     # interacao
     await interaction.response.send_message(command_list, ephemeral=False)
+
+@tree.command(name="adicionar_jogo", description="Adicione um novo jogo")
+@app_commands.describe(game_name="Nome do jogo")
+async def add_game_command(interaction: discord.Interaction, game_name: str):
+    await interaction.response.defer()  # Evita timeout enquanto a IA processa
+
+    # Obtém a nota e justificativa da IA
+    nota, justificativa = await avaliar_dificuldade_jogo(game_name)
+
+    if nota is None:
+        await interaction.followup.send(f"⚠️ Não foi possível avaliar a dificuldade de **{game_name}**. Tente novamente.", ephemeral=True)
+        return
+
+    # Salva o jogo no banco com a nota da IA
+    message = await add_game(game_name, nota)
+
+    # Envia a resposta com a justificativa da IA
+    await interaction.followup.send(f"{message}\n\n📋 **Justificativa da IA:** {justificativa}")
+
     
 acliente.run(os.getenv("DISCORD_TOKEN"))
