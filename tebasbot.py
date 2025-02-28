@@ -202,17 +202,14 @@ async def comandos(interaction: discord.Interaction):
 async def add_game_command(interaction: discord.Interaction, game_name: str):
     await interaction.response.defer(thinking=True)
 
-    # Obtém a nota e justificativa da IA
     nota, justificativa = await avaliar_dificuldade_jogo(game_name)
 
     if nota is None:
         await interaction.followup.send(f"⚠️ Não foi possível avaliar a dificuldade de **{game_name}**. Tente novamente.", ephemeral=True)
         return
 
-    # Salva o jogo no banco com a nota da IA
     message = await add_game(game_name, nota)
 
-    # Envia a resposta com a justificativa da IA
     await interaction.followup.send(f"{message}\n\n📋 **Justificativa da IA:** {justificativa}")
 
     
