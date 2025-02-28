@@ -160,6 +160,21 @@ async def steam(interaction: discord.Interaction, name: str):
     
     await interaction.response.send_message(embed=embed)
 
+@tree.command(name="ranking_zerados", description="Lista os jogos mais zerados")
+async def ranking_zerados(interaction: discord.Interaction):
+    ranking_list = await getRankingJogosZerados()
+
+    if not ranking_list:
+        await interaction.response.send_message("Ainda não há registros de jogos zerados.", ephemeral=True)
+        return
+
+    ranking_message = "**🎮 Ranking de Jogos Zerados 🎮**\n"
+    ranking_message += "\n".join(
+        [f"{i+1}. **{game}** - {count} vezes zerado(s)" for i, (game, count) in enumerate(ranking_list)]
+    )
+
+    await interaction.response.send_message(ranking_message)
+
 @tree.command(name="comandos", description="Lista todos os comandos disponíveis e como usá-los")
 async def comandos(interaction: discord.Interaction):
     command_list = """📌 **Comandos do Bot** 🎮🤖  

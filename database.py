@@ -60,6 +60,20 @@ async def getRanking(limit=10):
         ranking_list.append(f"{i}. <@{user['discord_id']}> - {user['points']} pontos")
 
     return ranking_list
+    
+async def getRankingJogosZerados(limit=10):
+        
+    pipeline = [
+        {"$unwind": "$games_completed"},
+        {"$group": {"_id": "$games_completed.name", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": limit}
+    ]
+
+    ranking = list(users.aggregate(pipeline))
+
+    return [(item["_id"], item["count"]) for item in ranking]
+
 
 def getNextGameID():
     """Obtém o próximo ID disponível para um jogo."""
