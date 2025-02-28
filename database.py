@@ -129,7 +129,7 @@ async def get_completed_games(user):
 async def get_all_games():    
     
     games_cursor = games.find().sort("name", pymongo.ASCENDING)
-    print(games_cursor)
+    # print(games_cursor)
     
     game_list = list(games_cursor)
     
