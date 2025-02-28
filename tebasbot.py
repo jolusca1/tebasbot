@@ -185,6 +185,7 @@ async def comandos(interaction: discord.Interaction):
 ✅ **/zerei [nome do jogo]** – Marca um jogo como zerado e ganha pontos.  
 ✅ **/jogos_zerados @usuário** – Lista todos os jogos zerados e a pontuação total do usuário mencionado. 
 ✅ **/jogos [nome]** – Lista todos os jogos cadastrados juntamente com os pontos de equivalência.
+✅ **/ranking_zerados** – Exibe um ranking com os 10 jogos mais zerados.
 ✅ **/perfil_steam [usuário steam]** – Exibe perfil da Steam
 
 
