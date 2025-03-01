@@ -182,3 +182,12 @@ async def avaliar_dificuldade_jogo(game_name):
         return nota, resposta
 
     return None, f"Erro ao acessar API: {response.text}"
+
+async def delete_game(game_name: str):
+    result = games.delete_one(
+        {"name": {"$regex": f"^{re.escape(game_name)}"}}
+    )
+    
+    if result.deleted_count > 0:
+        return True
+    return False    

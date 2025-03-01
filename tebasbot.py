@@ -4,10 +4,13 @@ import re
 from dotenv import load_dotenv
 from discord import app_commands
 from steam_service.api_service import get_steam_profile, get_games_played_recently
+from authorization.configer import AuthorizedUsersManager
 
 from database import *
 
 load_dotenv()
+
+auth_manager = AuthorizedUsersManager()
 
 #teste deploy
 
@@ -23,6 +26,34 @@ class Client(discord.Client):
             self.synced = True
             
         print(f"Entramos como {self.user}!")
+        
+class ConfirmView(discord.ui.View):
+    def __init__(self, game_name: str, author: discord.User, timeout=30):
+        super().__init__(timeout=timeout)
+        self.game_name = game_name
+        self.author = author
+
+    @discord.ui.button(label="Confirmar", style=discord.ButtonStyle.danger)
+    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Verifica se quem clicou é o mesmo que iniciou a ação
+        if interaction.user != self.author:
+            await interaction.response.send_message("Você não pode confirmar essa ação.", ephemeral=True)
+            return
+
+        success = await delete_game(self.game_name)
+        if success:
+            await interaction.response.edit_message(content=f"O jogo **{self.game_name}** foi deletado com sucesso.", view=None)
+        else:
+            await interaction.response.edit_message(content=f"Não foi possível encontrar ou deletar o jogo **{self.game_name}**.", view=None)
+        self.stop()
+
+    @discord.ui.button(label="Cancelar", style=discord.ButtonStyle.secondary)
+    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.author:
+            await interaction.response.send_message("Você não pode cancelar essa ação.", ephemeral=True)
+            return
+        await interaction.response.edit_message(content=f"A ação de deleção do jogo **{self.game_name}** foi cancelada.", view=None)
+        self.stop()
         
 acliente = Client()
 tree = app_commands.CommandTree(acliente)
@@ -212,5 +243,15 @@ async def add_game_command(interaction: discord.Interaction, game_name: str):
 
     await interaction.followup.send(f"{message}\n\n📋 **Justificativa da IA:** {justificativa}")
 
+@tree.command(name="deletar_jogo", description="Deleta um jogo do sistema (Apenas Admin)")
+@app_commands.describe(game_name="Nome do jogo a ser deletado")
+async def deletar_jogo(interaction: discord.Interaction, game_name: str):
+    if not auth_manager.is_authorized(interaction.user.id):
+        await interaction.response.send_message("Você não tem permissão para deletar jogos.", ephemeral=True)
+        return
     
+    confirmacao_view = ConfirmView(game_name, interaction.user)
+    
+    await interaction.response.send_message(f"Você realmente quer deletar o jogo **{game_name}**? Confirme:", view=confirmacao_view, ephemeral=True)
+
 acliente.run(os.getenv("DISCORD_TOKEN"))
