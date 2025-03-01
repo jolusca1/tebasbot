@@ -8,7 +8,6 @@ class AuthorizedUsersManager:
     def __init__(self, filename=os.getenv("PATH_AUTH")):
         self.filename = filename
         self.authorized_ids = self.load_authorized_ids()
-        print(self.authorized_ids)
 
     def load_authorized_ids(self):
         if os.path.exists(self.filename):
