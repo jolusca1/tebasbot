@@ -28,23 +28,24 @@ class Client(discord.Client):
         print(f"Entramos como {self.user}!")
         
 class ConfirmView(discord.ui.View):
-    def __init__(self, game_name: str, author: discord.User, timeout=30):
+    def __init__(self, game_id, game_name: str, author: discord.User, timeout=30):
         super().__init__(timeout=timeout)
+        self.game_id = game_id
         self.game_name = game_name
         self.author = author
 
     @discord.ui.button(label="Confirmar", style=discord.ButtonStyle.danger)
     async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Verifica se quem clicou é o mesmo que iniciou a ação
         if interaction.user != self.author:
             await interaction.response.send_message("Você não pode confirmar essa ação.", ephemeral=True)
             return
 
-        success = await delete_game(self.game_name)
-        if success:
-            await interaction.response.edit_message(content=f"O jogo **{self.game_name}** foi deletado com sucesso.", view=None)
+        result = await games.delete_one({"_id": self.game_id})
+        original_message = await interaction.original_response()
+        if result.deleted_count > 0:
+            await original_message.edit(content=f"O jogo **{self.game_name}** foi deletado com sucesso.", view=None)
         else:
-            await interaction.response.edit_message(content=f"Não foi possível encontrar ou deletar o jogo **{self.game_name}**.", view=None)
+            await original_message.edit(content=f"Não foi possível deletar o jogo **{self.game_name}**.", view=None)
         self.stop()
 
     @discord.ui.button(label="Cancelar", style=discord.ButtonStyle.secondary)
@@ -52,7 +53,8 @@ class ConfirmView(discord.ui.View):
         if interaction.user != self.author:
             await interaction.response.send_message("Você não pode cancelar essa ação.", ephemeral=True)
             return
-        await interaction.response.edit_message(content=f"A ação de deleção do jogo **{self.game_name}** foi cancelada.", view=None)
+        original_message = await interaction.original_response()
+        await original_message.edit(content=f"A ação de deleção do jogo **{self.game_name}** foi cancelada.", view=None)
         self.stop()
         
 acliente = Client()
@@ -243,15 +245,31 @@ async def add_game_command(interaction: discord.Interaction, game_name: str):
 
     await interaction.followup.send(f"{message}\n\n📋 **Justificativa da IA:** {justificativa}")
 
-@tree.command(name="deletar_jogo", description="Deleta um jogo do sistema (Apenas Admin)")
+@tree.command(name="deletar_jogo", description="Deleta um jogo do sistema")
 @app_commands.describe(game_name="Nome do jogo a ser deletado")
 async def deletar_jogo(interaction: discord.Interaction, game_name: str):
+    await interaction.response.defer(ephemeral=True)
+    
     if not auth_manager.is_authorized(interaction.user.id):
-        await interaction.response.send_message("Você não tem permissão para deletar jogos.", ephemeral=True)
+        await interaction.followup.send("Você não tem permissão para deletar jogos.", ephemeral=True)
         return
     
-    confirmacao_view = ConfirmView(game_name, interaction.user)
+    # game = await get_games_by_name(game_name, find_one=True)
+    # if not game:
+    #     await interaction.followup.send(f"Jogo **{game_name}** não encontrado.", ephemeral=True)
+    #     return
+    message = await delete_game(game_name)
     
-    await interaction.response.send_message(f"Você realmente quer deletar o jogo **{game_name}**? Confirme:", view=confirmacao_view, ephemeral=True)
+    if not message:
+        await interaction.followup.send(f"O jogo {game_name} não foi encontrado!")
+        return
+    
+    # confirmacao_view = ConfirmView(game_id=game["_id"], game_name=found_game_name, author=interaction.user)
+    
+    await interaction.followup.send(
+        f"O jogo **{message}** foi deletado com sucesso.",
+        ephemeral=True
+    )
+
 
 acliente.run(os.getenv("DISCORD_TOKEN"))

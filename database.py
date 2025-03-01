@@ -135,7 +135,16 @@ async def get_all_games():
     
     return game_list
 
-async def get_games_by_name(game_name):
+async def get_games_by_name(game_name, find_one=False):
+    
+    if find_one:
+        games_cursor = games.find_one(
+        {"name": {"$regex": re.escape(game_name)}}
+        )
+        if games_cursor:
+            return games_cursor
+        return False
+        
     games_cursor = games.find(
         {"name": {"$regex": re.escape(game_name), "$options": "i"}}
     ).sort("score", -1)
@@ -184,10 +193,16 @@ async def avaliar_dificuldade_jogo(game_name):
     return None, f"Erro ao acessar API: {response.text}"
 
 async def delete_game(game_name: str):
-    result = games.delete_one(
+    
+    game = games.find_one(
         {"name": {"$regex": f"^{re.escape(game_name)}"}}
     )
     
+    if not game:
+        return False
+    
+    result = games.delete_one({"_id": game["_id"]})
+    
     if result.deleted_count > 0:
-        return True
+        return game["name"]
     return False    
