@@ -235,6 +235,11 @@ async def comandos(interaction: discord.Interaction):
 async def add_game_command(interaction: discord.Interaction, game_name: str):
     await interaction.response.defer(thinking=True)
 
+    game = await is_game_exist(game_name)
+    if game:
+        await interaction.followup.send(f"⚠️ O jogo **{game['name']}** já está cadastrado com {game['score']} pontos.", ephemeral=True)
+        return
+
     nota, justificativa = await avaliar_dificuldade_jogo(game_name)
 
     if nota is None:

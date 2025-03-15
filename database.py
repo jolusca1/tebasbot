@@ -98,7 +98,7 @@ async def add_game(game_name, score):
     """Adiciona um jogo ao banco de dados sem permitir duplicatas (case insensitive)."""
     
     # Procura um jogo que tenha o mesmo nome, ignorando maiúsculas e minúsculas
-    existing_game = games.find_one({"name": {"$regex": f"^{re.escape(game_name)}$", "$options": "i"}})
+    existing_game = await is_game_exist(game_name)
 
     if existing_game:
         return f"⚠️ O jogo **{existing_game['name']}** já está cadastrado com {existing_game['score']} pontos."
@@ -112,6 +112,13 @@ async def add_game(game_name, score):
     games.insert_one(game_data)
 
     return f"✅ Jogo **{game_name}** adicionado com sucesso! (Pontuação: {score})"
+
+# method para verificar se um jogo existe no banco
+async def is_game_exist(game_name):
+    game = games.find_one({"name": {"$regex": f"^{re.escape(game_name)}$", "$options": "i"}})
+    if not game:
+        return False
+    return game
 
 async def get_completed_games(user):
     """Retorna a lista de jogos zerados por um usuário e a soma total dos pontos."""
