@@ -1,4 +1,4 @@
-from src.presentation.bot import run_bot
+from presentation.bot import run_bot
 import sys
 import os
 
