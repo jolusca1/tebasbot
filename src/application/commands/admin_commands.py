@@ -13,6 +13,7 @@ class AdminCommands(commands.Cog):
         self.auth_manager = auth_manager
         self.bot_owner_id = int(os.getenv("BOT_OWNER_ID", "0"))
 
+    # comando para autorizar um usuário a usar comandos administrativos
     @app_commands.command(name="autorizar", description="Autoriza um usuário a usar comandos administrativos")
     async def authorize_user(self, interaction: discord.Interaction, user: discord.User):
         # Apenas o dono do bot pode autorizar outros usuários
