@@ -99,4 +99,57 @@ class UserCommands(commands.Cog):
             f"🏅 **Pontuação total:** {total_score} pontos"
         )
 
-        await interaction.response.send_message(message) 
+        await interaction.response.send_message(message)
+
+    @app_commands.command(name="comandos", description="Lista todos os comandos disponíveis e como usá-los")
+    async def comandos(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title="📌 Comandos do Bot 🎮",
+            description="Lista de todos os comandos disponíveis",
+            color=discord.Color.blue()
+        )
+
+        # Comandos de Pontuação
+        embed.add_field(
+            name="🏆 Pontuação",
+            value=(
+                "• **/score** - Veja sua pontuação total\n"
+                "• **/ranking** - Ranking dos usuários com mais pontos"
+            ),
+            inline=False
+        )
+
+        # Comandos de Jogos
+        embed.add_field(
+            name="🎮 Gerenciamento de Jogos",
+            value=(
+                "• **/adicionar_jogo [nome]** - Adiciona um novo jogo ao sistema\n"
+                "• **/zerei [nome do jogo]** - Marca um jogo como zerado\n" 
+                "• **/jogos [nome]** - Lista todos os jogos cadastrados"
+            ),
+            inline=False
+        )
+
+        # Comandos de Estatísticas
+        embed.add_field(
+            name="📊 Estatísticas",
+            value=(
+                "• **/jogos_zerados @usuário** - Lista jogos zerados do usuário\n"
+                "• **/ranking_zerados** - Top 10 jogos mais zerados\n"
+                "• **/perfil_steam [usuário]** - Exibe perfil da Steam"
+            ),
+            inline=False
+        )
+
+        # Como usar
+        embed.add_field(
+            name="❓ Como usar os comandos?",
+            value=(
+                "1. Digite `/` e selecione o comando desejado\n"
+                "2. Preencha os campos solicitados\n" 
+                "3. Para mencionar usuários, use `@` e selecione"
+            ),
+            inline=False
+        )
+
+        await interaction.response.send_message(embed=embed)
