@@ -2,7 +2,6 @@ from presentation.bot import run_bot
 import sys
 import os
 
-# Adiciona o diretório raiz ao PYTHONPATH
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 if __name__ == "__main__":
