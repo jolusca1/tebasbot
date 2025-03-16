@@ -66,27 +66,18 @@ class CriteriosView(discord.ui.View):
         self.responses = {criterio: False for criterio in criterios}
         self.create_buttons()
 
-    def truncate_text(self, text, max_length=50):
-        """Trunca o texto para caber no botão"""
-        if len(text) <= max_length:
-            return text
-        return text[:max_length-3] + "..."
-
     def create_buttons(self):
-        for i, criterio in enumerate(self.criterios, 1):
-            # Cria um label curto para o botão
-            button_label = f"Critério {i}"
-            
+        for criterio in self.criterios:
             button = discord.ui.Button(
-                label=button_label,
+                label=criterio,
                 style=discord.ButtonStyle.secondary,
-                custom_id=criterio  # Mantém o critério original como ID
+                custom_id=criterio
             )
             button.callback = self.button_callback
             self.add_item(button)
 
         confirm_button = discord.ui.Button(
-            label="✅ Confirmar",
+            label="Confirmar",
             style=discord.ButtonStyle.success,
             custom_id="confirm"
         )
@@ -103,26 +94,7 @@ class CriteriosView(discord.ui.View):
             self.responses[criterio] = not self.responses[criterio]
             button = [x for x in self.children if x.custom_id == criterio][0]
             button.style = discord.ButtonStyle.success if self.responses[criterio] else discord.ButtonStyle.secondary
-            
-            # Atualiza o embed com a lista completa de critérios e seu status
-            embed = discord.Embed(
-                title=f"🎮 Verificação de Conclusão: {self.game_name}",
-                description="Clique nos critérios que você completou:",
-                color=discord.Color.blue()
-            )
-            
-            criterios_status = []
-            for i, (crit, completed) in enumerate(self.responses.items(), 1):
-                status = "✅" if completed else "⬜"
-                criterios_status.append(f"{status} **Critério {i}:**\n{crit}")
-            
-            embed.add_field(
-                name="Lista de Critérios:", 
-                value="\n\n".join(criterios_status), 
-                inline=False
-            )
-            
-            await interaction.response.edit_message(embed=embed, view=self)
+            await interaction.response.edit_message(view=self)
 
     async def confirm_callback(self, interaction: discord.Interaction):
         if interaction.user != self.user:
@@ -134,14 +106,10 @@ class CriteriosView(discord.ui.View):
             message = await completeGame(self.user, self.game_name)
             await interaction.response.edit_message(content=message, view=None)
         else:
-            incomplete_criterios = []
-            for i, (criterio, completed) in enumerate(self.responses.items(), 1):
-                if not completed:
-                    incomplete_criterios.append(f"**Critério {i}:**\n{criterio}")
-            
+            incomplete_criterios = [c for c, v in self.responses.items() if not v]
             await interaction.response.edit_message(
-                content=f"❌ Você ainda não completou todos os critérios para zerar **{self.game_name}**!\n\n**Critérios pendentes:**\n\n" + 
-                "\n\n".join(incomplete_criterios),
+                content=f"❌ Você ainda não completou todos os critérios para zerar **{self.game_name}**!\n\nCritérios pendentes:\n" + 
+                "\n".join(f"• {c}" for c in incomplete_criterios),
                 view=None
             )
 
@@ -216,13 +184,6 @@ async def complete_game_command(interaction: discord.Interaction, game_name: str
         await interaction.response.send_message(f"❌ Nenhum jogo encontrado com o nome **{game_name}**!")
         return
 
-    # Verifica se o usuário já zerou o jogo
-    user_data = users.find_one({"discord_id": interaction.user.id})
-    if user_data and "games_completed" in user_data:
-        if any(g["game_id"] == game["game_id"] for g in user_data["games_completed"]):
-            await interaction.response.send_message(f"❌ Você já zerou **{game['name']}**!")
-            return
-
     criterios = await get_game_criterios(game_name)
     if not criterios:
         # Se não houver critérios cadastrados, usa o fluxo antigo
@@ -234,17 +195,6 @@ async def complete_game_command(interaction: discord.Interaction, game_name: str
         title=f"🎮 Verificação de Conclusão: {game['name']}",
         description="Clique nos critérios que você completou:",
         color=discord.Color.blue()
-    )
-
-    # Adiciona os critérios iniciais ao embed
-    criterios_status = []
-    for i, criterio in enumerate(criterios, 1):
-        criterios_status.append(f"⬜ **Critério {i}:**\n{criterio}")
-    
-    embed.add_field(
-        name="Lista de Critérios:", 
-        value="\n\n".join(criterios_status), 
-        inline=False
     )
 
     view = CriteriosView(game['name'], criterios, interaction.user)
@@ -390,7 +340,7 @@ async def add_game_command(interaction: discord.Interaction, game_name: str):
         elif section.startswith('Justificativa da Nota:'):
             embed.add_field(name="📝 Justificativa", value=section.replace('Justificativa da Nota:', '').strip(), inline=False)
 
-    await interaction.followup.send(embed=embed)
+    await interaction.response.send_message(embed=embed)
 
 @tree.command(name="deletar_jogo", description="Deleta um jogo do sistema")
 @app_commands.describe(game_name="Nome do jogo a ser deletado")

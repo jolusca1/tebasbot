@@ -94,7 +94,7 @@ def getNextGameID():
     return result["seq"]
 
 # Adicionar um jogo ao banco com ID incremental
-async def add_game(game_name, nota, criterios):
+async def add_game(game_name, score):
     """Adiciona um jogo ao banco de dados sem permitir duplicatas (case insensitive)."""
     
     # Procura um jogo que tenha o mesmo nome, ignorando maiúsculas e minúsculas
@@ -108,15 +108,10 @@ async def add_game(game_name, nota, criterios):
     new_game_id = (last_game["game_id"] + 1) if last_game else 1
 
     # Insere o jogo no banco
-    game_data = {
-        "game_id": new_game_id, 
-        "name": game_name, 
-        "score": nota,
-        "criterios": criterios
-    }
+    game_data = {"game_id": new_game_id, "name": game_name, "score": score}
     games.insert_one(game_data)
 
-    return f"✅ Jogo **{game_name}** adicionado com sucesso! (Pontuação: {nota})"
+    return f"✅ Jogo **{game_name}** adicionado com sucesso! (Pontuação: {score})"
 
 # method para verificar se um jogo existe no banco
 async def is_game_exist(game_name):
@@ -133,21 +128,25 @@ async def get_completed_games(user):
     if not user_data or "games_completed" not in user_data or not user_data["games_completed"]:
         return [], 0  # Retorna lista vazia e pontuação 0 se não houver jogos
 
-    games_completed = user_data["games_completed"]
-    total_score = sum(game["score"] for game in games_completed)
+    games = user_data["games_completed"]
+    total_score = sum(game["score"] for game in games)
 
-    return games_completed, total_score
+    return games, total_score
 
 async def get_all_games():    
     
     games_cursor = games.find().sort("name", pymongo.ASCENDING)
-    return list(games_cursor)
+    # print(games_cursor)
+    
+    game_list = list(games_cursor)
+    
+    return game_list
 
 async def get_games_by_name(game_name, find_one=False):
     
     if find_one:
         games_cursor = games.find_one(
-            {"name": {"$regex": re.escape(game_name)}}
+        {"name": {"$regex": re.escape(game_name)}}
         )
         if games_cursor:
             return games_cursor
@@ -170,17 +169,12 @@ async def avaliar_dificuldade_jogo(game_name):
     - Difícil: 6-8 (ex.: Cuphead, Celeste)
     - Muito Difícil: 9-10 (ex.: Soulslikes, Bloodborne)
 
-    Lembre-se de que esses exemplos são apenas referência. Ao avaliar um jogo individual, responda seguindo este formato:
-    
-    Nota: X/10
-    
-    Critérios para Zerar:
-    [Liste 3-5 critérios principais que precisam ser cumpridos para considerar o jogo como zerado]
-    
-    Justificativa da Nota:
-    [Explique em até 5 frases por que essa nota foi atribuída]
+    Lembre-se de que esses exemplos são apenas referência. Ao avaliar um jogo individual, responda de forma objetiva em até 10 frases, dando uma nota de 1 a 10 e uma justificativa breve (sem bullet points) seguindo este formato:
+    Nota: X/10  
+    Justificativa: [resposta em até 10 frases].
 
     Agora, responda para '{game_name}' seguindo esse formato.
+
     """
 
     client = genai.Client(api_key=os.getenv('GEMINI_TOKEN'))
@@ -194,30 +188,12 @@ async def avaliar_dificuldade_jogo(game_name):
         resposta = response.text
         
         import re
-        # Procura por padrões de nota com ou sem negrito/asteriscos
-        nota_patterns = [
-            r'Nota:\s*(\d{1,2})/10',  # Padrão normal
-            r'Nota:\s*\*\*(\d{1,2})/10\*\*',  # Padrão com negrito markdown
-            r'\*\*Nota:\*\*\s*(\d{1,2})/10',  # Padrão com título em negrito
-            r'\*\*Nota:\s*(\d{1,2})/10\*\*'   # Padrão com tudo em negrito
-        ]
-        
-        nota = None
-        for pattern in nota_patterns:
-            match = re.search(pattern, resposta)
-            if match:
-                nota_valor = int(match.group(1))
-                if 1 <= nota_valor <= 10:
-                    nota = nota_valor
-                    break
+        match = re.search(r'Nota: (\d{1,2})/10', resposta)
+        nota = int(match.group(1)) if match and 1 <= int(match.group(1)) <= 10 else None
         
         if nota is None:
             print("⚠️ Erro: A IA não retornou a nota corretamente!")
             print("Resposta recebida:", resposta)
-
-        # Remove formatação markdown da resposta para exibição
-        resposta = re.sub(r'\*\*', '', resposta)  # Remove negrito
-        resposta = re.sub(r'\*', '', resposta)    # Remove itálico
 
         return nota, resposta
 
@@ -237,21 +213,3 @@ async def delete_game(game_name: str):
     if result.deleted_count > 0:
         return game["name"]
     return False    
-
-def extract_criterios(resposta):
-    """Extrai os critérios da resposta da IA"""
-    import re
-    criterios_match = re.search(r'Critérios para Zerar:(.*?)(?=Justificativa da Nota:|$)', resposta, re.DOTALL)
-    if criterios_match:
-        criterios_text = criterios_match.group(1).strip()
-        # Remove marcadores de lista e espaços extras
-        criterios = [c.strip().lstrip('*•-') for c in criterios_text.split('\n') if c.strip()]
-        return [c for c in criterios if c]  # Remove linhas vazias
-    return []
-
-async def get_game_criterios(game_name):
-    """Retorna os critérios de um jogo específico."""
-    game = games.find_one({"name": {"$regex": re.escape(game_name), "$options": "i"}})
-    if game and "criterios" in game:
-        return game["criterios"]
-    return None    

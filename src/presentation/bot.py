@@ -1,0 +1,54 @@
+import discord
+from discord.ext import commands
+from ..application.commands.game_commands import GameCommands
+from ..application.commands.user_commands import UserCommands
+from ..application.commands.steam_commands import SteamCommands
+from ..application.commands.admin_commands import AdminCommands
+from ..application.services.game_service import GameService
+from ..application.services.user_service import UserService
+from ..infrastructure.database.mongodb.repositories.mongo_game_repository import MongoGameRepository
+from ..infrastructure.database.mongodb.repositories.mongo_user_repository import MongoUserRepository
+from ..infrastructure.config.auth_manager import AuthorizedUsersManager
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class TebasBot(commands.Bot):
+    def __init__(self):
+        super().__init__(
+            command_prefix="!",
+            intents=discord.Intents.default(),
+            help_command=None
+        )
+        self.synced = False
+
+    async def setup_hook(self):
+        # Inicializa os repositórios
+        game_repository = MongoGameRepository()
+        user_repository = MongoUserRepository()
+
+        # Inicializa os serviços
+        game_service = GameService(game_repository)
+        user_service = UserService(user_repository, game_repository)
+
+        # Inicializa o gerenciador de autorização
+        auth_manager = AuthorizedUsersManager()
+
+        # Adiciona os comandos
+        await self.add_cog(GameCommands(self, game_service, user_service, auth_manager))
+        await self.add_cog(UserCommands(self, user_service))
+        await self.add_cog(SteamCommands(self))
+        await self.add_cog(AdminCommands(self, auth_manager))
+
+        # Sincroniza os comandos com o Discord
+        if not self.synced:
+            await self.tree.sync()
+            self.synced = True
+
+    async def on_ready(self):
+        print(f"Entramos como {self.user}!")
+
+def run_bot():
+    bot = TebasBot()
+    bot.run(os.getenv("DISCORD_TOKEN")) 
