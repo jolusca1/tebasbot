@@ -12,5 +12,6 @@ setup(
         'motor',
         'google-generativeai',
         'steam'
-    ]
+    ],
+    python_requires='>=3.8'
 )
