@@ -1,0 +1,6 @@
+include README.md
+include requirements.txt
+recursive-include src *
+global-exclude *.pyc
+global-exclude __pycache__/*
+global-exclude .git/* 
