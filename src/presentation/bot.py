@@ -16,9 +16,16 @@ load_dotenv()
 
 class TebasBot(commands.Bot):
     def __init__(self):
+        # Configura todas as intents necessárias
+        intents = discord.Intents.default()
+        intents.message_content = True  # Habilita o intent de conteúdo de mensagem
+        intents.members = True          # Habilita o intent de membros
+        intents.guilds = True           # Habilita o intent de servidores
+        intents.guild_messages = True   # Habilita o intent de mensagens do servidor
+        
         super().__init__(
             command_prefix="!",
-            intents=discord.Intents.default(),
+            intents=intents,
             help_command=None
         )
         self.synced = False
@@ -47,7 +54,7 @@ class TebasBot(commands.Bot):
             self.synced = True
 
     async def on_ready(self):
-        print(f"Entramos como {self.user}!")
+        print(f"✅ Bot iniciado como {self.user}!")
 
 def run_bot():
     bot = TebasBot()
