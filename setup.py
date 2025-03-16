@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-
+# setup para o bot
 setup(
     name="tebasbot",
     version="1.0.0",
