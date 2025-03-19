@@ -42,7 +42,7 @@ class UserService:
         # Atualiza o usuário no banco
         success = await self.user_repository.update_user(user)
         if success:
-            return True, f"🏆 {user.discord_id} zerou **{game.name}** e ganhou **{game.score} pontos**!"
+            return True, f"🏆 <@{user.discord_id}> zerou **{game.name}** e ganhou **{game.score} pontos**!"
         return False, "Erro ao atualizar os dados do usuário."
 
     async def get_ranking(self, limit: int = 10) -> List[User]:
