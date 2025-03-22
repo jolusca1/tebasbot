@@ -109,10 +109,10 @@ class AdminCommands(commands.Cog):
                     user = await self.bot.fetch_user(user_id)
                 
                 if user:
-                    message += f"• {user.mention} (ID: {user_id})\n"
+                    message += f"• {user.mention}\n"
                 else:
-                    message += f"• Usuário não encontrado (ID: {user_id})\n"
+                    message += f"• Usuário não encontrado.\n"
             except Exception as e:
-                message += f"• Erro ao buscar usuário (ID: {user_id})\n"
+                message += f"• Erro ao buscar usuário.\n"
 
         await interaction.response.send_message(message) 
