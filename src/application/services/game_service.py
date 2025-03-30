@@ -1,7 +1,7 @@
 from typing import List, Optional, Tuple
 from ...domain.models.game import Game
 from ...domain.interfaces.i_game_repository import IGameRepository
-from ...infrastructure.external.gemini_api import avaliar_dificuldade_jogo, extract_criterios
+from ...infrastructure.external.groq_api import avaliar_dificuldade_jogo, extract_criterios
 
 class GameService:
     def __init__(self, game_repository: IGameRepository):
