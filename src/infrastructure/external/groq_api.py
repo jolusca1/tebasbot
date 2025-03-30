@@ -10,7 +10,6 @@ async def avaliar_dificuldade_jogo(game_name: str) -> Tuple[int, str]:
     """Avalia a dificuldade de um jogo usando a API do Groq"""
 
     isGamePlat = re.search('PLATINADO', game_name)
-    print(isGamePlat)
     
     prompt = f"""
     Avalie a dificuldade do jogo {game_name} considerando estes itens como base para a AVALIAÇÃO:
@@ -26,9 +25,9 @@ async def avaliar_dificuldade_jogo(game_name: str) -> Tuple[int, str]:
     - Difícil: 6-8 (ex.: Cuphead, Celeste)
     - Muito Difícil: 9-10 (ex.: Soulslikes, Bloodborne)
 
-    Responda EXATAMENTE neste formato, sem adicionar qualquer outro texto ou qualificadores:
-
     {'CONSIDERE ESTE JOGO COMO [PLATINADO] E ATRIBUA NOTAS MAIS ALTAS DO QUE A DE UMA AVALIAÇÃO SEM A PLATINA' if isGamePlat else ''}
+
+    Responda EXATAMENTE neste formato abaixo, sem adicionar qualquer outro texto ou qualificadores:
 
     Nota: X/10
 
@@ -38,7 +37,6 @@ async def avaliar_dificuldade_jogo(game_name: str) -> Tuple[int, str]:
     Justificativa da Nota:
     [Explique em até 5 frases por que essa nota foi atribuída, considerando os critérios para zerar.]
     """
-    print(prompt)
 
     client = Groq(api_key=os.getenv('GROQ_API_KEY'))
 
