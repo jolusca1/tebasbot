@@ -4,6 +4,7 @@ from ..application.commands.game_commands import GameCommands
 from ..application.commands.user_commands import UserCommands
 from ..application.commands.steam_commands import SteamCommands
 from ..application.commands.admin_commands import AdminCommands
+from ..application.commands.valorant_commands import ValorantCommands
 from ..application.services.game_service import GameService
 from ..application.services.user_service import UserService
 from ..infrastructure.database.mongodb.repositories.mongo_game_repository import MongoGameRepository
@@ -47,6 +48,7 @@ class TebasBot(commands.Bot):
         await self.add_cog(UserCommands(self, user_service))
         await self.add_cog(SteamCommands(self))
         await self.add_cog(AdminCommands(self, auth_manager))
+        await self.add_cog(ValorantCommands(self))
 
         # Sincroniza os comandos com o Discord
         if not self.synced:
