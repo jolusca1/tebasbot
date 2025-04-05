@@ -13,8 +13,8 @@ class ValorantAPI:
         self.url: str = 'https://api.henrikdev.xyz/valorant'
         self.version: str = 'v2'
 
-    def get_mmr_by_player(self, name: str, tag: str):
-        endpoint = 'mmr/br'
+    def get_mmr_by_player(self, name: str, tag: str, region: str):
+        endpoint = 'mmr'
         try:
 
             headers = {
@@ -22,7 +22,7 @@ class ValorantAPI:
                 "Authorization": "HDEV-72ec20fa-f1a7-4e17-9616-df21e1131134"
             }
 
-            response = requests.get(f'{self.url}/{self.version}/{endpoint}/{name}/{tag}', headers=headers)
+            response = requests.get(f'{self.url}/{self.version}/{endpoint}/{region}/{name}/{tag}', headers=headers)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:

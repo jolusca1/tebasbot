@@ -7,8 +7,10 @@ from ..application.commands.admin_commands import AdminCommands
 from ..application.commands.valorant_commands import ValorantCommands
 from ..application.services.game_service import GameService
 from ..application.services.user_service import UserService
+from ..application.services.valorant_service import ValorantService
 from ..infrastructure.database.mongodb.repositories.mongo_game_repository import MongoGameRepository
 from ..infrastructure.database.mongodb.repositories.mongo_user_repository import MongoUserRepository
+from ..infrastructure.database.mongodb.repositories.mongo_valorant_repository import MongoValorantRepository
 from ..infrastructure.config.auth_manager import AuthorizedUsersManager
 import os
 from dotenv import load_dotenv
@@ -35,10 +37,12 @@ class TebasBot(commands.Bot):
         # Inicializa os repositórios
         game_repository = MongoGameRepository()
         user_repository = MongoUserRepository()
+        valorant_repository = MongoValorantRepository()
 
         # Inicializa os serviços
         game_service = GameService(game_repository)
         user_service = UserService(user_repository, game_repository)
+        valorant_service = ValorantService(valorant_repository)
 
         # Inicializa o gerenciador de autorização
         auth_manager = AuthorizedUsersManager()
@@ -48,7 +52,7 @@ class TebasBot(commands.Bot):
         await self.add_cog(UserCommands(self, user_service))
         await self.add_cog(SteamCommands(self))
         await self.add_cog(AdminCommands(self, auth_manager))
-        await self.add_cog(ValorantCommands(self))
+        await self.add_cog(ValorantCommands(self, valorant_service))
 
         # Sincroniza os comandos com o Discord
         if not self.synced:
