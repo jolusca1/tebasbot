@@ -23,7 +23,7 @@ class ValorantAPI:
             }
 
             response = requests.get(f'{self.url}/{self.version}/{endpoint}/{region}/{name}/{tag}', headers=headers)
-            response.raise_for_status()
+            # response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
             raise Exception(f"Ocorreu um erro ao processar: {e}")

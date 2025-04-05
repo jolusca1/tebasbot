@@ -1,5 +1,11 @@
+import threading
+import os
+import schedule
+import time
 import discord
 from discord.ext import commands
+from ..application.routines.player_update_routine import schedule_updates as schedule_player_updates
+from ..application.routines.ranking_update_routine import schedule_ranking_updates
 from ..application.commands.game_commands import GameCommands
 from ..application.commands.user_commands import UserCommands
 from ..application.commands.steam_commands import SteamCommands
@@ -12,7 +18,6 @@ from ..infrastructure.database.mongodb.repositories.mongo_game_repository import
 from ..infrastructure.database.mongodb.repositories.mongo_user_repository import MongoUserRepository
 from ..infrastructure.database.mongodb.repositories.mongo_valorant_repository import MongoValorantRepository
 from ..infrastructure.config.auth_manager import AuthorizedUsersManager
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -59,9 +64,21 @@ class TebasBot(commands.Bot):
             await self.tree.sync()
             self.synced = True
 
+        # Inicia as rotinas de atualização em threads separadas
+        self.start_update_routines()
+
+    def start_update_routines(self):
+        # Inicia a rotina de atualização de jogadores em uma thread separada
+        player_update_thread = threading.Thread(target=schedule_player_updates)
+        player_update_thread.start()
+        
+        # Inicia a rotina de atualização de rankings em uma thread separada
+        ranking_thread = threading.Thread(target=schedule_ranking_updates, args=(1,))
+        ranking_thread.start()
+
     async def on_ready(self):
         print(f"✅ Bot iniciado como {self.user}!")
 
 def run_bot():
     bot = TebasBot()
-    bot.run(os.getenv("DISCORD_TOKEN")) 
+    bot.run(os.getenv("DISCORD_TOKEN"))

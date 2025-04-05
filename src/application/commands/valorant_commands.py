@@ -2,6 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from ..services.valorant_service import ValorantService
+from ...utils.translator_elo import translate_elo
 
 
 class ValorantCommands(commands.Cog):
@@ -9,7 +10,7 @@ class ValorantCommands(commands.Cog):
         self.bot = bot
         self.valorant_service = valorant_service
 
-    @app_commands.command(name="cadastrar_conta_valorant", description="Cadastrar sua conta VALORANT no ranking")
+    @app_commands.command(name="buscar_conta_valorant", description="Cadastrar sua conta VALORANT no ranking")
     @app_commands.choices(region=[
         app_commands.Choice(name="Brasil", value="br"),
         app_commands.Choice(name="América do Norte", value="na"),
@@ -28,8 +29,6 @@ class ValorantCommands(commands.Cog):
         if result:
             player_valorant = await self.valorant_service.get_player_valorant(result);
 
-            print(player_valorant)
-
             if not player_valorant:
                 embed = discord.Embed(
                     title="❌ Erro ao cadastrar",
@@ -38,6 +37,9 @@ class ValorantCommands(commands.Cog):
                 )
                 await interaction.edit_original_response(embed=embed)
                 return
+            
+            # Atualiza o ranking no banco de dados
+            await self.valorant_service.update_player_ranking(player_valorant)
 
 
         embed = discord.Embed(
@@ -49,16 +51,70 @@ class ValorantCommands(commands.Cog):
             color=discord.Color.from_rgb(255, 0, 128)
         )
 
-        embed.set_thumbnail(url=player_valorant.get("image"))
         embed.set_footer(text="tebasbot • Valorant Ranking", icon_url=self.bot.user.display_avatar.url)
         embed.timestamp = interaction.created_at
 
-        embed.add_field(name="🏆 Elo atual", value=f"**{player_valorant.get('elo')}**", inline=False)
+        embed.add_field(name="🏆 Elo atual", value=f"**{translate_elo(player_valorant.get('elo'))}**", inline=False)
         embed.add_field(name="📈 Última partida", value=f"**{player_valorant.get('mmr_last_match')}** RR", inline=False)
         embed.add_field(name="🔝 Elo mais alto", value=f"**{player_valorant.get('highest_rank')}**", inline=False)
 
         await interaction.edit_original_response(embed=embed)
 
+    @app_commands.command(name="ranking_valorant", description="Veja o ranking dos jogadores com maior elo do servidor!")
+    async def ranking_valorant(self, interaction: discord.Interaction):
+        await interaction.response.defer(thinking=True)
+
+        ELO_ORDER = {
+            "Iron 1": 1, "Iron 2": 2, "Iron 3": 3,
+            "Bronze 1": 4, "Bronze 2": 5, "Bronze 3": 6,
+            "Silver 1": 7, "Silver 2": 8, "Silver 3": 9,
+            "Gold 1": 10, "Gold 2": 11, "Gold 3": 12,
+            "Platinum 1": 13, "Platinum 2": 14, "Platinum 3": 15,
+            "Diamond 1": 16, "Diamond 2": 17, "Diamond 3": 18,
+            "Ascendant 1": 19, "Ascendant 2": 20, "Ascendant 3": 21,
+            "Immortal 1": 22, "Immortal 2": 23, "Immortal 3": 24,
+            "Radiant": 25
+        }
+            
+        # Busca todos os jogadores do banco de dados
+        players = await self.valorant_service.get_all_players()
+        ranking = []
+
+        for player in players:
+            ranking.append({
+                "name": player.name,
+                "tag": player.tag,
+                "elo": player.elo,
+                "current_mmr": player.current_mmr,
+                "image": player.image
+            })
+
+        print("ranking da rapaziada")
+
+        print(ranking)
+
+        # Ordena o ranking com base no elo e current_mmr
+        ranking.sort(key=lambda x: (ELO_ORDER.get(x["elo"], 0), x.get("current_mmr", 0)), reverse=True)
+
+        embed = discord.Embed(
+            title="🏆 Ranking Valorant (Elo)",
+            description="Confira os jogadores mais bem ranqueados!",
+            color=discord.Color.gold()
+        )
+
+        for i, player in enumerate(ranking, start=1):
+            embed.add_field(
+                name=f"{i}. {player['name']}#{player['tag']}",
+                value=f"**Elo:** {translate_elo(player['elo'])} - {player['current_mmr']} pontos",
+                inline=False
+            )
+        
+        if ranking:
+            embed.set_thumbnail(url=ranking[0]["image"])
+
+        await interaction.edit_original_response(embed=embed)
+
+    @staticmethod
     def elo_to_emoji(elo: str) -> str:
         emojis = {
             "Iron": "🔩", "Bronze": "🥉", "Silver": "🥈", "Gold": "🥇",

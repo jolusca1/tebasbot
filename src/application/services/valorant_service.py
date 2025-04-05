@@ -19,16 +19,24 @@ class ValorantService:
 
         return player
 
+    async def get_all_players(self):
+        players = await self.valorant_repository.get_all_players()
+
+        print(f"O que está retornando no get_all_players{players}")
+        
+        return players
+
     async def get_player_valorant(self, player_valorant: ValorantPlayer):
         valorant_api = ValorantAPI()
         player = player_valorant.to_dict()
-        print(player)
 
         player_data = valorant_api.get_mmr_by_player(
             player["name"],
             player["tag"],
             player["region"]
         )
+
+        print(player_data.get("status"))
 
         if player_data.get("status") == 200:
 
@@ -37,6 +45,7 @@ class ValorantService:
                 "tag": player_data.get("data").get("tag"),
                 "elo": player_data.get("data").get("current_data").get("currenttierpatched"),
                 "mmr_last_match": player_data.get("data").get("current_data").get("mmr_change_to_last_game"),
+                "current_mmr": player_data.get("data").get("current_data").get("ranking_in_tier"),
                 "image": player_data.get("data").get("current_data").get("images").get("large"),
                 "highest_rank": player_data.get("data").get("highest_rank").get("patched_tier")
             }
