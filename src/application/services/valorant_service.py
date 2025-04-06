@@ -36,11 +36,9 @@ class ValorantService:
             player["region"]
         )
 
-        print(player_data.get("status"))
-
         if player_data.get("status") == 200:
 
-            return {
+            player_result = {
                 "name": player_data.get("data").get("name"),
                 "tag": player_data.get("data").get("tag"),
                 "elo": player_data.get("data").get("current_data").get("currenttierpatched"),
@@ -49,6 +47,21 @@ class ValorantService:
                 "image": player_data.get("data").get("current_data").get("images").get("large"),
                 "highest_rank": player_data.get("data").get("highest_rank").get("patched_tier")
             }
+
+            updated_player = ValorantPlayer(
+                name=player_result["name"],
+                tag=player_result["tag"],
+                region=player_valorant.region,
+                elo=player_result["elo"],
+                mmr_last_match=player_result["mmr_last_match"],
+                current_mmr=player_result["current_mmr"],
+                image=player_result["image"],
+                highest_rank=player_result["highest_rank"]
+            )
+
+            await self.valorant_repository.update_user(updated_player)
+
+            return player_result
             
     async def update_player_ranking(self, player_valorant: ValorantPlayer):
         """Atualiza o ranking do jogador no banco de dados"""
