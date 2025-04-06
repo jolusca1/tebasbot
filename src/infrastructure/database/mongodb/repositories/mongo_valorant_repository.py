@@ -46,7 +46,7 @@ class MongoValorantRepository(IValorantRepository):
                 )
             else:
                 await self.collection.insert_one(
-                    {"$set": player.to_dict()}
+                    player.to_dict()
                 )
             return True
         except Exception as e:

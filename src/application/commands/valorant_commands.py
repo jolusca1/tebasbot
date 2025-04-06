@@ -2,6 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from ..services.valorant_service import ValorantService
+from ...domain.models.valorant import ValorantPlayer
 from ...utils.translator_elo import translate_elo
 
 
@@ -22,30 +23,47 @@ class ValorantCommands(commands.Cog):
     async def cadastrar_player(self, interaction: discord.Interaction, name: str, tag: str, region: app_commands.Choice[str]):
         await interaction.response.defer(thinking=True)
 
-        result = await self.valorant_service.get_or_create_player(
-            name, tag, region.value
+        player_valorant = ValorantPlayer(
+            name=name,
+            tag=tag,
+            region=region.value,
+            elo="",
+            mmr_last_match=0,
+            current_mmr=0,
+            image="",
+            highest_rank=""
         )
 
-        if result:
-            player_valorant = await self.valorant_service.get_player_valorant(result);
+        player_valorant_data = await self.valorant_service.get_player_valorant(player_valorant)
 
-            if not player_valorant:
-                embed = discord.Embed(
-                    title="❌ Erro ao cadastrar",
-                    description="Não conseguimos encontrar essa conta na API da Riot. Verifique se o `nome#tag` e a região estão corretos.",
-                    color=discord.Color.red()
-                )
-                await interaction.edit_original_response(embed=embed)
-                return
-            
-            # Atualiza o ranking no banco de dados
-            await self.valorant_service.update_player_ranking(player_valorant)
+        if not player_valorant_data:
+            embed = discord.Embed(
+                title="❌ Erro ao cadastrar",
+                description="Não conseguimos encontrar essa conta na API da Riot. Verifique se o `nome#tag` e a região estão corretos.",
+                color=discord.Color.red()
+            )
+            await interaction.edit_original_response(embed=embed)
+            return
+        
+        player_valorant = ValorantPlayer(
+            name=player_valorant_data.get('name'),
+            tag=player_valorant_data.get('tag'),
+            region=region.value,
+            elo=player_valorant_data.get('elo'),
+            mmr_last_match=player_valorant_data.get('mmr_last_match'),
+            current_mmr=player_valorant_data.get('current_mmr'),
+            image=player_valorant_data.get('image'),
+            highest_rank=player_valorant_data.get('highest_rank')
+        )
+        
+        # Update the database with API data only
+        await self.valorant_service.update_player_ranking(player_valorant)
 
 
         embed = discord.Embed(
             title=f"🎖️ Perfil VALORANT",
             description=(
-                f"**Jogador:** `{player_valorant.get('name')}#{player_valorant.get('tag')}`\n"
+                f"**Jogador:** `{player_valorant.name}#{player_valorant.tag}`\n"
                 f"**Região:** `{region.name}`\n"
             ),
             color=discord.Color.from_rgb(255, 0, 128)
@@ -54,9 +72,9 @@ class ValorantCommands(commands.Cog):
         embed.set_footer(text="tebasbot • Valorant Ranking", icon_url=self.bot.user.display_avatar.url)
         embed.timestamp = interaction.created_at
 
-        embed.add_field(name="🏆 Elo atual", value=f"**{translate_elo(player_valorant.get('elo'))}**", inline=False)
-        embed.add_field(name="📈 Última partida", value=f"**{player_valorant.get('mmr_last_match')}** RR", inline=False)
-        embed.add_field(name="🔝 Elo mais alto", value=f"**{player_valorant.get('highest_rank')}**", inline=False)
+        embed.add_field(name="🏆 Elo atual", value=f"**{translate_elo(player_valorant.elo)}**", inline=False)
+        embed.add_field(name="📈 Última partida", value=f"**{player_valorant.mmr_last_match}** RR", inline=False)
+        embed.add_field(name="🔝 Elo mais alto", value=f"**{player_valorant.highest_rank}**", inline=False)
 
         await interaction.edit_original_response(embed=embed)
 
