@@ -49,3 +49,14 @@ class ValorantService:
                 "image": player_data.get("data").get("current_data").get("images").get("large"),
                 "highest_rank": player_data.get("data").get("highest_rank").get("patched_tier")
             }
+            
+    async def update_player_ranking(self, player_valorant: ValorantPlayer):
+        """Atualiza o ranking do jogador no banco de dados"""
+        try:
+            # Update the player's ranking in the repository
+            await self.valorant_repository.update_user(player_valorant)
+            print(f"Ranking atualizado: {player_valorant.name}#{player_valorant.tag}")
+            return True
+        except Exception as e:
+            print(f"Erro ao atualizar ranking: {e}")
+            return False
