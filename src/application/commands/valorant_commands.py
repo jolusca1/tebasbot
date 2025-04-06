@@ -107,10 +107,6 @@ class ValorantCommands(commands.Cog):
                 "image": player.image
             })
 
-        print("ranking da rapaziada")
-
-        print(ranking)
-
         # Ordena o ranking com base no elo e current_mmr
         ranking.sort(key=lambda x: (ELO_ORDER.get(x["elo"], 0), x.get("current_mmr", 0)), reverse=True)
 

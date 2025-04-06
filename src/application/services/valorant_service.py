@@ -21,8 +21,6 @@ class ValorantService:
 
     async def get_all_players(self):
         players = await self.valorant_repository.get_all_players()
-
-        print(f"O que está retornando no get_all_players{players}")
         
         return players
 
