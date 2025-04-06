@@ -36,10 +36,10 @@ class MongoValorantRepository(IValorantRepository):
     async def update_user(self, player: ValorantPlayer) -> bool:
         """Atualiza os dados de um usuário"""
         try:
-            player = await self.collection.find_one(
+            get_player = await self.collection.find_one(
                 {"name": player.name, "tag": player.tag, "region": player.region}
             )
-            if player:
+            if get_player:
                 await self.collection.update_one(
                     {"name": player.name, "tag": player.tag},
                     {"$set": player.to_dict()}
