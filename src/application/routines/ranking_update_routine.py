@@ -51,7 +51,7 @@ def schedule_ranking_updates(interval_minutes=1):
     asyncio.run(update_rankings())
     
     # Schedule recurring updates
-    schedule.every(interval_minutes).hours.do(lambda: asyncio.run(update_rankings()))
+    schedule.every(interval_minutes).minutes.do(lambda: asyncio.run(update_rankings()))
     
     try:
         while True:
