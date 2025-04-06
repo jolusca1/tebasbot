@@ -37,7 +37,7 @@ class MongoValorantRepository(IValorantRepository):
         """Atualiza os dados de um usuário"""
         try:
             get_player = await self.collection.find_one(
-                {"name": player.name, "tag": player.tag, "region": player.region}
+                {"name": player.name, "tag": player.tag}
             )
             if get_player:
                 await self.collection.update_one(
