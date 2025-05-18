@@ -7,7 +7,14 @@ from ..services.user_service import UserService
 from ..views.criterios_view import CriteriosView
 from ..views.games_view import GamesView
 from ...infrastructure.config.auth_manager import AuthorizedUsersManager
+from ...infrastructure.external.whatsapp_api import WhatsAppAPI
 import re
+import os
+import asyncio
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 class GameCommands(commands.Cog):
     def __init__(self, bot: commands.Bot, game_service: GameService, user_service: UserService, auth_manager: AuthorizedUsersManager):
@@ -70,15 +77,17 @@ class GameCommands(commands.Cog):
 
     @app_commands.command(name="zerei", description="Marque um jogo como zerado e ganhe pontos")
     async def complete_game(self, interaction: discord.Interaction, game_name: str):
+        await interaction.response.defer()  # <- avisa ao Discord que você está processando
+
         game = await self.game_service.get_game(game_name)
         if not game:
-            await interaction.response.send_message(f"❌ Nenhum jogo encontrado com o nome **{game_name}**!")
+            await interaction.followup.send(f"❌ Nenhum jogo encontrado com o nome **{game_name}**!")
             return
 
         # Verifica se o usuário já zerou o jogo
         user = await self.user_service.get_or_create_user(interaction.user.id)
         if user.has_completed_game(game.game_id):
-            await interaction.response.send_message(f"❌ Você já zerou **{game.name}**!")
+            await interaction.followup.send(f"❌ Você já zerou **{game.name}**!")
             return
 
         if game.criterios:
@@ -88,23 +97,38 @@ class GameCommands(commands.Cog):
                 color=discord.Color.blue()
             )
 
-            criterios_status = []
-            for i, criterio in enumerate(game.criterios, 1):
-                criterios_status.append(f"⬜ **Critério {i}:**\n{criterio}")
-            
-            embed.add_field(
-                name="Lista de Critérios:", 
-                value="\n\n".join(criterios_status), 
-                inline=False
-            )
+            criterios_status = [
+                f"⬜ **Critério {i}:**\n{crit}"
+                for i, crit in enumerate(game.criterios, 1)
+            ]
+            embed.add_field(name="Lista de Critérios:", value="\n\n".join(criterios_status), inline=False)
 
             view = CriteriosView(game.name, game.criterios, interaction.user, self.user_service)
-            await interaction.response.send_message(embed=embed, view=view)
+
+            await interaction.followup.send(embed=embed, view=view)
+
+            # WhatsApp em background
+            asyncio.create_task(self._send_whatsapp_message(interaction.user.display_name, game))
             return
 
-        # Se não houver critérios, usa o fluxo antigo
+        # Fluxo sem critérios
         success, message = await self.user_service.complete_game(interaction.user.id, game_name)
-        await interaction.response.send_message(message)
+        await interaction.followup.send(message)
+
+        if success:
+            asyncio.create_task(self._send_whatsapp_message(interaction.user.display_name, game))
+
+
+    async def _send_whatsapp_message(self, username: str, game):
+        try:
+            destino = os.getenv('JID_GRUPO_SLZF')
+            texto = f"📥 {username} zerou um novo jogo: *{game.name}* e ganhou *{game.score}* pontos!"
+            whatsapp = WhatsAppAPI(texto, destino)
+            resposta = whatsapp.send_message()
+            print("Mensagem WhatsApp enviada:", resposta)
+        except Exception as e:
+            print(f"[Erro WhatsApp] {e}")
+
 
     @app_commands.command(name="deletar_jogo", description="Deleta um jogo do sistema")
     @app_commands.describe(game_name="Nome do jogo a ser deletado")
