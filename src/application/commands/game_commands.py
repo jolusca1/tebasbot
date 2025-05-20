@@ -122,7 +122,14 @@ class GameCommands(commands.Cog):
     async def _send_whatsapp_message(self, username: str, game):
         try:
             destino = os.getenv('JID_GRUPO_SLZF')
-            texto = f"📥 ```TEBAS BOT```: *{username}* zerou um novo jogo: *{game.name}* e ganhou *{game.score}* pontos!"
+            texto = (
+                "📣 *NOVO JOGO ZERADO!*\n\n"
+                "🎮 Jogador: *{username}*\n"
+                "🏆 Jogo: *{game.name}*\n"
+                "✨ Pontuação: *{game.score}* pontos\n\n"
+                "📥 ```TEBAS BOT``` registrou a conquista!"
+            )
+
             whatsapp = WhatsAppAPI(texto, destino)
             resposta = whatsapp.send_message()
             print("Mensagem WhatsApp enviada:", resposta)
