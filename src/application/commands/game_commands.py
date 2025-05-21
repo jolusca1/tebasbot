@@ -111,12 +111,14 @@ class GameCommands(commands.Cog):
             asyncio.create_task(self._send_whatsapp_message(interaction.user.display_name, game))
             return
 
-        # Fluxo sem critérios
-        success, message = await self.user_service.complete_game(interaction.user.id, game_name)
-        await interaction.followup.send(message)
+        #Fluxo sem critérios
+        else:
+            success, message = await self.user_service.complete_game(interaction.user.id, game_name)
+             await interaction.followup.send(message)
 
-        if success:
-            asyncio.create_task(self._send_whatsapp_message(interaction.user.display_name, game))
+            if success:
+                asyncio.create_task(self._send_whatsapp_message(interaction.user.display_name, game))
+            return
 
 
     async def _send_whatsapp_message(self, username: str, game):
