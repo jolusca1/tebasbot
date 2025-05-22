@@ -114,7 +114,7 @@ class GameCommands(commands.Cog):
         #Fluxo sem critérios
         else:
             success, message = await self.user_service.complete_game(interaction.user.id, game_name)
-             await interaction.followup.send(message)
+            await interaction.followup.send(message)
 
             if success:
                 asyncio.create_task(self._send_whatsapp_message(interaction.user.display_name, game))
