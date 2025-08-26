@@ -44,7 +44,7 @@ async def avaliar_dificuldade_jogo(game_name: str) -> Tuple[int, str]:
         response = client.chat.completions.create(
             model=os.getenv('GROQ_LLM_MODEL'),
             messages=[{"role": "user", "content": prompt}],
-            temperature=1
+            temperature=0.5
         )
 
         if response and response.choices:
@@ -89,3 +89,4 @@ def extract_criterios(resposta: str) -> List[str]:
         criterios = [c.strip().lstrip('*•-') for c in criterios_text.split('\n') if c.strip()]
         return [c for c in criterios if c]
     return []
+
